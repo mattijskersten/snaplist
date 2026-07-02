@@ -36,8 +36,14 @@ class ListingPromptTest {
         assertTrue(prompt.contains("Kobiety"))
         assertTrue(prompt.contains("Przedmioty designerskie"))
         assertTrue(prompt.contains("Hobby i kolekcjonerstwo"))
-        // Second level anchored
-        assertTrue(prompt.contains("Ubrania dla dziewczynek"))
+        // Second level anchored for all nine trees
+        assertTrue(prompt.contains("Ubrania dla dziewczynek")) // Dzieci
+        assertTrue(prompt.contains("Damskie przedmioty designerskie")) // Designer
+        assertTrue(prompt.contains("Naczynia do gotowania i pieczenia")) // Dom
+        assertTrue(prompt.contains("Gry wideo i konsole")) // Elektronika
+        assertTrue(prompt.contains("Czasopisma")) // Rozrywka
+        assertTrue(prompt.contains("Karty kolekcjonerskie")) // Hobby
+        assertTrue(prompt.contains("Sporty zimowe")) // Sport
         // Generic English instruction replaced, placeholder resolved
         assertTrue(!prompt.contains("Midi dresses"))
         assertTrue(!prompt.contains("{CATEGORY_GUIDANCE}"))
