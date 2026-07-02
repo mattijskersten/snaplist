@@ -36,13 +36,18 @@ object ListingPrompt {
     const val USER_INSTRUCTION =
         "Create the Vinted listing draft for the item in these photos."
 
+    /** Nullable string as anyOf — structured outputs doesn't accept type:["string","null"]. */
+    private val nullableString = mapOf(
+        "anyOf" to listOf(mapOf("type" to "string"), mapOf("type" to "null")),
+    )
+
     /** JSON schema for output_config (additionalProperties=false, all fields required). */
     val schema: Map<String, Any?> = mapOf(
         "type" to "object",
         "properties" to mapOf(
             "title" to mapOf("type" to "string"),
             "description" to mapOf("type" to "string"),
-            "brand" to mapOf("type" to listOf("string", "null")),
+            "brand" to nullableString,
             "category_path" to mapOf("type" to "array", "items" to mapOf("type" to "string")),
             "condition" to mapOf(
                 "type" to "string",
@@ -50,9 +55,9 @@ object ListingPrompt {
                     "new_with_tags", "new_without_tags", "very_good", "good", "satisfactory",
                 ),
             ),
-            "size" to mapOf("type" to listOf("string", "null")),
+            "size" to nullableString,
             "colors" to mapOf("type" to "array", "items" to mapOf("type" to "string")),
-            "material" to mapOf("type" to listOf("string", "null")),
+            "material" to nullableString,
             "price_suggested" to mapOf("type" to "number"),
             "price_low" to mapOf("type" to "number"),
             "price_high" to mapOf("type" to "number"),

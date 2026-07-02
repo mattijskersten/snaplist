@@ -1,5 +1,6 @@
 package com.snaplist.data.ai
 
+import android.util.Log
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.core.JsonValue
 import com.anthropic.errors.AnthropicIoException
@@ -19,6 +20,8 @@ import java.io.File
 
 /** User-presentable analyzer failures. */
 class AnalyzerException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+private const val TAG = "SnapListAnalyzer"
 
 class ListingAnalyzer {
 
@@ -91,13 +94,18 @@ class ListingAnalyzer {
                 throw AnalyzerException("Could not read the model's answer. Try again.", e)
             }
         } catch (e: UnauthorizedException) {
+            Log.e(TAG, "analysis failed: unauthorized", e)
             throw AnalyzerException("Invalid API key. Check it in Settings.", e)
         } catch (e: RateLimitException) {
+            Log.e(TAG, "analysis failed: rate limited", e)
             throw AnalyzerException("Rate limited by the API. Wait a minute and retry.", e)
         } catch (e: AnthropicIoException) {
+            Log.e(TAG, "analysis failed: network", e)
             throw AnalyzerException("Network problem. Check your connection and retry.", e)
         } catch (e: AnthropicServiceException) {
-            throw AnalyzerException("API error (${e.statusCode()}). Try again later.", e)
+            Log.e(TAG, "analysis failed: API ${e.statusCode()}", e)
+            val detail = e.message?.take(300).orEmpty()
+            throw AnalyzerException("API error (${e.statusCode()}): $detail", e)
         } finally {
             client.close()
         }
