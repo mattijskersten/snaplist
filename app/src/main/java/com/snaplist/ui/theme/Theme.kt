@@ -11,17 +11,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val Teal = Color(0xFF0FA47A)
-private val TealDark = Color(0xFF0B7C5C)
+// Brand colors from the SnapList logo (option 3b).
+private val Teal = Color(0xFF0E9AA7)
+private val Amber = Color(0xFFFFC94A)
 
 private val LightColors = lightColorScheme(
     primary = Teal,
-    secondary = TealDark,
+    secondary = Amber,
 )
 
 private val DarkColors = darkColorScheme(
     primary = Teal,
-    secondary = TealDark,
+    secondary = Amber,
 )
 
 @Composable
