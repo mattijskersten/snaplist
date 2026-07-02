@@ -50,10 +50,38 @@ class ListingPromptTest {
     }
 
     @Test
-    fun `markets without an anchor keep the generic category instruction`() {
+    fun `Netherlands gets anchored Dutch taxonomy including bulky-item categories`() {
         val prompt = ListingPrompt.systemPrompt("Netherlands", "EUR", "Dutch")
+        assertTrue(prompt.contains("Dames"))
+        assertTrue(prompt.contains("Meubilair")) // Furniture: bulky-shipping markets only
+        assertTrue(!prompt.contains("Midi dresses"))
+        assertTrue(!prompt.contains("{CATEGORY_GUIDANCE}"))
+    }
+
+    @Test
+    fun `Germany omits the bulky-item categories its market does not carry`() {
+        val prompt = ListingPrompt.systemPrompt("Germany", "EUR", "German")
+        assertTrue(prompt.contains("Damen"))
+        // vinted.de has no Furniture (3154) / Large appliances (3475) nodes
+        assertTrue(!prompt.contains("Large appliances"))
+        assertTrue(prompt.contains("Möbel & Deko")) // Kids furniture stays
+        assertTrue(!prompt.contains("Möbel;")) // Home-level Furniture is gone
+    }
+
+    @Test
+    fun `United States gets US English names`() {
+        val prompt = ListingPrompt.systemPrompt("United States", "USD", "English")
+        assertTrue(prompt.contains("Strollers"))
+        assertTrue(prompt.contains("Hobbies & collectibles"))
+        assertTrue(!prompt.contains("Pushchairs"))
+        assertTrue(!prompt.contains("collectables"))
+    }
+
+    @Test
+    fun `unknown countries keep the generic category instruction`() {
+        val prompt = ListingPrompt.systemPrompt("Narnia", "EUR", "English")
         assertTrue(prompt.contains("Midi dresses"))
-        assertTrue(!prompt.contains("Kobiety"))
+        assertTrue(!prompt.contains("verbatim"))
         assertTrue(!prompt.contains("{CATEGORY_GUIDANCE}"))
     }
 
