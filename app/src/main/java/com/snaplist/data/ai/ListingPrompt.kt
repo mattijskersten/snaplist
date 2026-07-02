@@ -6,7 +6,15 @@ package com.snaplist.data.ai
  */
 object ListingPrompt {
 
-    fun systemPrompt(country: String, currency: String, language: String): String = """
+    private const val GENERIC_CATEGORY_GUIDANCE =
+        "- category_path: the Vinted category hierarchy from broad to specific, in English,\n" +
+            "  e.g. [\"Women\", \"Clothing\", \"Dresses\", \"Midi dresses\"]. 3-4 levels."
+
+    fun systemPrompt(country: String, currency: String, language: String): String = template(
+        country, currency, language,
+    ).replace("{CATEGORY_GUIDANCE}", VintedCategories.guidanceFor(country) ?: GENERIC_CATEGORY_GUIDANCE)
+
+    private fun template(country: String, currency: String, language: String): String = """
         You are drafting a resale listing for vinted.com from the user's photos of a single item.
         The seller is in $country and prices are in $currency.
         Write the title and description in $language.
@@ -19,8 +27,7 @@ object ListingPrompt {
         - description: 2-5 short sentences, friendly, honest. Mention measurements only if visible.
           Always mention visible flaws or wear explicitly - misgraded items cause disputes and refunds.
         - brand: exactly as written on the label; null if no brand is visible.
-        - category_path: the Vinted category hierarchy from broad to specific, in English,
-          e.g. ["Women", "Clothing", "Dresses", "Midi dresses"]. 3-4 levels.
+        {CATEGORY_GUIDANCE}
         - condition: one of the Vinted tiers, judged conservatively from the photos:
           new_with_tags (unworn, original tags visible), new_without_tags (unworn, no tags),
           very_good (lightly used, tiny signs of wear), good (used, visible wear or small flaws,
