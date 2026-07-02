@@ -8,10 +8,11 @@ import org.junit.Test
 class ListingPromptTest {
 
     @Test
-    fun `system prompt embeds country and currency`() {
-        val prompt = ListingPrompt.systemPrompt("Germany", "EUR")
+    fun `system prompt embeds country, currency and language`() {
+        val prompt = ListingPrompt.systemPrompt("Germany", "EUR", "German")
         assertTrue(prompt.contains("Germany"))
         assertTrue(prompt.contains("EUR"))
+        assertTrue(prompt.contains("in German"))
         assertTrue(prompt.contains("vinted.com"))
     }
 

@@ -35,6 +35,7 @@ class ListingAnalyzer {
         photos: List<File>,
         country: String,
         currency: String,
+        language: String,
     ): ListingAnalysis = withContext(Dispatchers.IO) {
         require(photos.isNotEmpty()) { "No photos to analyze" }
         if (apiKey.isBlank()) {
@@ -68,7 +69,7 @@ class ListingAnalyzer {
             val params = MessageCreateParams.builder()
                 .model(model)
                 .maxTokens(4000L)
-                .system(ListingPrompt.systemPrompt(country, currency))
+                .system(ListingPrompt.systemPrompt(country, currency, language))
                 .outputConfig(
                     OutputConfig.builder()
                         .format(

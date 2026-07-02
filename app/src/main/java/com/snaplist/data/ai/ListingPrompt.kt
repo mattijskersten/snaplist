@@ -6,9 +6,10 @@ package com.snaplist.data.ai
  */
 object ListingPrompt {
 
-    fun systemPrompt(country: String, currency: String): String = """
+    fun systemPrompt(country: String, currency: String, language: String): String = """
         You are drafting a resale listing for vinted.com from the user's photos of a single item.
         The seller is in $country and prices are in $currency.
+        Write the title and description in $language.
 
         Look carefully at every photo: labels, brand tags, size tags, care/material tags,
         wear, stains, pilling, damage. Then produce a complete listing draft.

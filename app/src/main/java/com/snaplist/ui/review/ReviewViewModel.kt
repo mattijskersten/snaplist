@@ -49,6 +49,7 @@ class ReviewViewModel(
                     photos = current.photoPaths.map { File(it) }.filter { it.exists() },
                     country = settings.country,
                     currency = settings.currency,
+                    language = settings.language,
                 )
                 container.draftDao.update(applyAnalysis(current, analysis))
             } catch (e: AnalyzerException) {
