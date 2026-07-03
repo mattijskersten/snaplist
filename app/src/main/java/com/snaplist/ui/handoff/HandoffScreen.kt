@@ -51,9 +51,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.rememberCoroutineScope
-import java.io.File
 
-private val VINTED_PACKAGES = listOf("com.vinted.android", "com.vinted")
+private val VINTED_PACKAGES = listOf("fr.vinted", "com.vinted.android", "com.vinted")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,26 +81,6 @@ fun HandoffScreen(
         VINTED_PACKAGES.firstOrNull { pkg ->
             runCatching { context.packageManager.getPackageInfo(pkg, 0) }.isSuccess
         }
-
-    fun sharePhotos() {
-        val uris = ArrayList<Uri>(
-            current.photoPaths.map { container.photos.shareUri(File(it)) }
-        )
-        val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = "image/jpeg"
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            vintedPackage()?.let { setPackage(it) }
-        }
-        val toLaunch = if (intent.`package` != null &&
-            intent.resolveActivity(context.packageManager) != null
-        ) {
-            intent
-        } else {
-            Intent.createChooser(intent.apply { setPackage(null) }, "Share photos")
-        }
-        context.startActivity(toLaunch)
-    }
 
     fun openVinted(splitScreen: Boolean = false) {
         val pkg = vintedPackage()
@@ -162,17 +141,15 @@ fun HandoffScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                "1. Send the photos to Vinted — this opens a new listing there with the " +
-                    "photos attached.\n" +
+                "1. Save the photos to your gallery, then in Vinted start a listing and " +
+                    "pick them from Pictures/SnapList. (Vinted doesn't accept shared " +
+                    "photos, so this is the fastest way in.)\n" +
                     "2. Copy each field below and paste it into Vinted's form " +
                     "(split-screen makes this quick).",
                 style = MaterialTheme.typography.bodyMedium,
             )
 
-            Button(onClick = { sharePhotos() }, modifier = Modifier.fillMaxWidth()) {
-                Text("Send ${current.photoPaths.size} photos to Vinted")
-            }
-            OutlinedButton(
+            Button(
                 onClick = {
                     scope.launch {
                         val n = withContext(Dispatchers.IO) {
@@ -185,14 +162,9 @@ fun HandoffScreen(
             ) {
                 Text(
                     savedToGallery?.let { "Saved $it photos to gallery ✓" }
-                        ?: "Save photos to gallery instead"
+                        ?: "Save ${current.photoPaths.size} photos to gallery"
                 )
             }
-            Text(
-                "If sharing doesn't open Vinted's sell flow, save the photos to the gallery, " +
-                    "open Vinted, start a listing and pick them from Pictures/SnapList.",
-                style = MaterialTheme.typography.bodySmall,
-            )
 
             Spacer(Modifier.height(8.dp))
             Button(onClick = { launchFloatingHelper() }, modifier = Modifier.fillMaxWidth()) {

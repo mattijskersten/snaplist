@@ -13,6 +13,7 @@
         android:required="false" />
 
     <queries>
+        <package android:name="fr.vinted" />
         <package android:name="com.vinted.android" />
         <package android:name="com.vinted" />
     </queries>
