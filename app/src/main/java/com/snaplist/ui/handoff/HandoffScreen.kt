@@ -1,10 +1,15 @@
 package com.snaplist.ui.handoff
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.snaplist.appContainer
 import com.snaplist.data.db.DraftStatus
+import com.snaplist.overlay.HandoffOverlayService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,24 +103,43 @@ fun HandoffScreen(
         context.startActivity(toLaunch)
     }
 
-    fun openVinted() {
+    fun openVinted(splitScreen: Boolean = false) {
         val pkg = vintedPackage()
         val intent = pkg?.let { context.packageManager.getLaunchIntentForPackage(it) }
             ?: Intent(Intent.ACTION_VIEW, Uri.parse("https://www.vinted.com/items/new"))
+        if (splitScreen) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
         context.startActivity(intent)
     }
 
-    val fields = buildList {
-        add("Title" to current.title)
-        add("Description" to current.description)
-        if (current.brand.isNotBlank()) add("Brand" to current.brand)
-        if (current.categoryPath.isNotEmpty()) add("Category" to current.categoryPath.joinToString(" › "))
-        current.condition?.let { add("Condition" to it.label) }
-        if (current.size.isNotBlank()) add("Size" to current.size)
-        if (current.colors.isNotEmpty()) add("Colors" to current.colors.joinToString(", "))
-        if (current.material.isNotBlank()) add("Material" to current.material)
-        current.price?.let { add("Price" to it.toString()) }
+    fun startFloatingHelper() {
+        HandoffOverlayService.start(context, draftId)
+        openVinted()
     }
+
+    val notificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { startFloatingHelper() } // helper works either way; notification is a bonus
+
+    fun launchFloatingHelper() {
+        if (!Settings.canDrawOverlays(context)) {
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${context.packageName}"),
+                )
+            )
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 33) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            startFloatingHelper()
+        }
+    }
+
+    val fields = current.handoffFields()
 
     Scaffold(
         topBar = {
@@ -163,12 +188,27 @@ fun HandoffScreen(
                         ?: "Save photos to gallery instead"
                 )
             }
+            Text(
+                "If sharing doesn't open Vinted's sell flow, save the photos to the gallery, " +
+                    "open Vinted, start a listing and pick them from Pictures/SnapList.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { launchFloatingHelper() }, modifier = Modifier.fillMaxWidth()) {
+                Text("Open Vinted with floating helper")
+            }
+            OutlinedButton(onClick = { openVinted(splitScreen = true) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Open Vinted in split screen")
+            }
             OutlinedButton(onClick = { openVinted() }, modifier = Modifier.fillMaxWidth()) {
                 Text("Open Vinted")
             }
             Text(
-                "If sharing doesn't open Vinted's sell flow, save the photos to the gallery, " +
-                    "open Vinted, start a listing and pick them from Pictures/SnapList.",
+                "The floating helper stays on top of Vinted so you can copy every field " +
+                    "without switching apps — its notification also has a copy-next-field " +
+                    "button. First use asks for the “display over other apps” " +
+                    "permission; tap the button again after granting it.",
                 style = MaterialTheme.typography.bodySmall,
             )
 
@@ -201,6 +241,7 @@ fun HandoffScreen(
             Spacer(Modifier.height(8.dp))
             Button(
                 onClick = {
+                    HandoffOverlayService.stop(context)
                     scope.launch {
                         container.draftDao.get(draftId)?.let {
                             container.draftDao.update(it.copy(status = DraftStatus.POSTED))
